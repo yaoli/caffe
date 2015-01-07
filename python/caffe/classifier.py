@@ -45,7 +45,35 @@ class Classifier(caffe.Net):
             image_dims = self.crop_dims
         self.image_dims = image_dims
 
+    def extract_features(self, inputs, blobs):
+        """
+        See 'def predict()' for doc
 
+        blobs: for example, ['fc6','fc7','fc8']
+        """
+        # Scale to standardize input dimensions.
+        input_ = np.zeros((len(inputs),
+            self.image_dims[0], self.image_dims[1], inputs[0].shape[2]),
+            dtype=np.float32)
+        for ix, in_ in enumerate(inputs):
+            input_[ix] = caffe.io.resize_image(in_, self.image_dims)
+
+        # Take center crop.
+        center = np.array(self.image_dims) / 2.0
+        crop = np.tile(center, (1, 2))[0] + np.concatenate([
+            -self.crop_dims / 2.0,
+            self.crop_dims / 2.0
+        ])
+        input_ = input_[:, crop[0]:crop[2], crop[1]:crop[3], :]
+        # Classify
+        caffe_in = np.zeros(np.array(input_.shape)[[0,3,1,2]],
+                            dtype=np.float32)
+        for ix, in_ in enumerate(input_):
+            caffe_in[ix] = self.preprocess(self.inputs[0], in_)
+        
+        out = self.forward_all(blobs,**{self.inputs[0]: caffe_in})
+        return out
+    
     def predict(self, inputs, oversample=True):
         """
         Predict classification probabilities of inputs.
