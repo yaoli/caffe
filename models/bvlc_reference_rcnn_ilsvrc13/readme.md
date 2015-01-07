@@ -13,8 +13,8 @@ Try the [detection example](http://nbviewer.ipython.org/github/BVLC/caffe/blob/m
 
 *N.B. For research purposes, make use of the official R-CNN package and not this example.*
 
+This model was trained by Ross Girshick @rbgirshick
+
 ## License
 
-The data used to train this model comes from the ImageNet project, which distributes its database to researchers who agree to a following term of access:
-"Researcher shall use the Database only for non-commercial research and educational purposes."
-Accordingly, this model is distributed under a non-commercial license.
+This model is released for unrestricted use.
