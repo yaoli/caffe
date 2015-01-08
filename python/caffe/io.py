@@ -29,7 +29,10 @@ def load_image(filename, color=True):
         img = img[:, :, :3]
     return img
 
-
+def load_images(filenames, color=True):
+    images = skimage.io.ImageCollection(filenames).concatenate()/255.0
+    return images.astype('float32')
+    
 def resize_image(im, new_dims, interp_order=1):
     """
     Resize an image array with interpolation.
