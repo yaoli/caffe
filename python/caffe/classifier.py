@@ -4,7 +4,7 @@ Classifier is an image classifier specialization of Net.
 """
 
 import numpy as np
-
+import time
 import caffe
 
 
@@ -52,26 +52,38 @@ class Classifier(caffe.Net):
         blobs: for example, ['fc6','fc7','fc8']
         """
         # Scale to standardize input dimensions.
-        input_ = np.zeros((len(inputs),
-            self.image_dims[0], self.image_dims[1], inputs[0].shape[2]),
-            dtype=np.float32)
-        for ix, in_ in enumerate(inputs):
-            input_[ix] = caffe.io.resize_image(in_, self.image_dims)
-
+        try:
+            input_ = np.zeros((len(inputs),
+                self.image_dims[0], self.image_dims[1], inputs[0].shape[2]),
+                dtype=np.float32)
+        except IndexError, e:
+            # encounter a greyscale image, turn that into a RGB image
+            inputs = inputs[:,:,:,np.newaxis] * np.ones((1,1,1,3))
+            input_ = np.zeros((len(inputs),
+                self.image_dims[0], self.image_dims[1], inputs[0].shape[2]),
+                dtype=np.float32)
+        if 1:
+            # only one image
+            for ix, in_ in enumerate(inputs):
+                input_[ix] = caffe.io.resize_image(in_, self.image_dims)
+        elif inputs.ndim == 4:
+            # although this is done by batch, but very slow
+            input_ = caffe.io.resize_image_batch(input_, self.image_dims)
         # Take center crop.
         center = np.array(self.image_dims) / 2.0
         crop = np.tile(center, (1, 2))[0] + np.concatenate([
             -self.crop_dims / 2.0,
             self.crop_dims / 2.0
         ])
+        
         input_ = input_[:, crop[0]:crop[2], crop[1]:crop[3], :]
         # Classify
         caffe_in = np.zeros(np.array(input_.shape)[[0,3,1,2]],
                             dtype=np.float32)
         for ix, in_ in enumerate(input_):
             caffe_in[ix] = self.preprocess(self.inputs[0], in_)
-        
         out = self.forward_all(blobs,**{self.inputs[0]: caffe_in})
+        t2 = time.time()
         return out
     
     def predict(self, inputs, oversample=True):

@@ -6,6 +6,7 @@ interface.
 from collections import OrderedDict
 from itertools import izip_longest
 import numpy as np
+import time
 
 from ._caffe import Net, SGDSolver
 import caffe.io

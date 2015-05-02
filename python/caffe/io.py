@@ -53,10 +53,17 @@ def resize_image(im, new_dims, interp_order=1):
         resized_im = resized_std * (im_max - im_min) + im_min
     else:
         # ndimage interpolates anything but more slowly.
-        scale = tuple(np.array(new_dims) / np.array(im.shape[:2]))
+        # but this handles batch
+        scale = tuple(np.array(new_dims) / (np.array(im.shape[:2])+.0))
         resized_im = zoom(im, scale + (1,), order=interp_order)
     return resized_im.astype(np.float32)
 
+def resize_image_batch(ims, new_dims, interp_order=1):
+    # This is in fact slow than using resize_image
+    assert ims.ndim == 4
+    scale = tuple(np.array(new_dims) / (np.array(ims.shape[1:3])+.0))
+    resized_ims = zoom(ims, (1,)+scale + (1,), order=interp_order)
+    return resized_ims.astype(np.float32)
 
 def oversample(images, crop_dims):
     """
