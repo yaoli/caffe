@@ -292,12 +292,12 @@ def _Net_preprocess(self, input_name, input_):
     Give
     caffe_inputs: (K x H x W) ndarray
     """
-    caffe_in = input_.astype(np.float32, copy=False)
-    mean = self.mean.get(input_name)
-    input_scale = self.input_scale.get(input_name)
-    raw_scale = self.raw_scale.get(input_name)
-    channel_order = self.channel_swap.get(input_name)
-    in_size = self.blobs[input_name].data.shape[2:]
+    caffe_in = input_.astype(np.float32, copy=False) # (224,224,3)
+    mean = self.mean.get(input_name) # (3,224,224)
+    input_scale = self.input_scale.get(input_name) # None
+    raw_scale = self.raw_scale.get(input_name) # 255
+    channel_order = self.channel_swap.get(input_name) # (2,1,0)
+    in_size = self.blobs[input_name].data.shape[2:] # (224, 224)
     if caffe_in.shape[:2] != in_size:
         caffe_in = caffe.io.resize_image(caffe_in, in_size)
     if channel_order is not None:
@@ -306,7 +306,7 @@ def _Net_preprocess(self, input_name, input_):
     if raw_scale is not None:
         caffe_in *= raw_scale
     if mean is not None:
-        caffe_in -= mean
+        caffe_in -= mean # mean is between 0 and 255
     if input_scale is not None:
         caffe_in *= input_scale
     return caffe_in

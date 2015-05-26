@@ -39,7 +39,7 @@ class Classifier(caffe.Net):
             self.set_raw_scale(self.inputs[0], raw_scale)
         if channel_swap is not None:
             self.set_channel_swap(self.inputs[0], channel_swap)
-
+        # input dim (10,3,224,224)
         self.crop_dims = np.array(self.blobs[self.inputs[0]].data.shape[2:])
         if not image_dims:
             image_dims = self.crop_dims
@@ -48,11 +48,12 @@ class Classifier(caffe.Net):
     def extract_features(self, inputs, blobs):
         """
         See 'def predict()' for doc
-
         blobs: for example, ['fc6','fc7','fc8']
+        inputs: (200,240,320,3)
         """
         # Scale to standardize input dimensions.
         try:
+            # (200,224,224,3)
             input_ = np.zeros((len(inputs),
                 self.image_dims[0], self.image_dims[1], inputs[0].shape[2]),
                 dtype=np.float32)
@@ -69,18 +70,19 @@ class Classifier(caffe.Net):
         elif inputs.ndim == 4:
             # although this is done by batch, but very slow
             input_ = caffe.io.resize_image_batch(input_, self.image_dims)
-        # Take center crop.
+        # Take center crop. Actually take the entire image of 224,224,3
         center = np.array(self.image_dims) / 2.0
         crop = np.tile(center, (1, 2))[0] + np.concatenate([
             -self.crop_dims / 2.0,
             self.crop_dims / 2.0
         ])
-        
-        input_ = input_[:, crop[0]:crop[2], crop[1]:crop[3], :]
+        input_ = input_[:, crop[0]:crop[2], crop[1]:crop[3], :] # (200,224,224,3)
         # Classify
+        # (200,3,224,224)
         caffe_in = np.zeros(np.array(input_.shape)[[0,3,1,2]],
                             dtype=np.float32)
         for ix, in_ in enumerate(input_):
+            # preprocess each image one by one
             caffe_in[ix] = self.preprocess(self.inputs[0], in_)
         out = self.forward_all(blobs,**{self.inputs[0]: caffe_in})
         t2 = time.time()
