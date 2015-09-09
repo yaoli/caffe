@@ -224,6 +224,8 @@ def _Net_set_mean(self, input_, mean, mode='elementwise'):
         self.mean[input_] = mean
     elif mode == 'channel':
         self.mean[input_] = mean.mean(1).mean(1).reshape((in_shape[1], 1, 1))
+    elif mode == 'nothing':
+        self.mean[input_] = mean.mean(0)
     else:
         raise Exception('Mode not in {}'.format(['elementwise', 'channel']))
 
@@ -293,6 +295,7 @@ def _Net_preprocess(self, input_name, input_):
     caffe_inputs: (K x H x W) ndarray
     """
     caffe_in = input_.astype(np.float32, copy=False) # (224,224,3)
+    import pdb; pdb.set_trace()
     mean = self.mean.get(input_name) # (3,224,224)
     input_scale = self.input_scale.get(input_name) # None
     raw_scale = self.raw_scale.get(input_name) # 255
